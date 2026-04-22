@@ -7,8 +7,8 @@ LDFLAGS =
 
 # Sanitizer flags - uncomment during development and testing.
 # Do not leave them enabled in a "release" build as they affect performance.
-#
-# CFLAGS += -fsanitize=address,undefined -fno-omit-frame-pointer -g
+
+CFLAGS += -fsanitize=address,undefined -fno-omit-frame-pointer -g
 
 LIB     = bun_parse.c
 MAIN    = main.c
