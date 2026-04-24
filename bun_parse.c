@@ -95,6 +95,35 @@ bun_result_t bun_parse_header(BunParseContext *ctx, BunHeader *header) {
     return BUN_MALFORMED;
   }
 
+  if (header->version_major != BUN_VERSION_MAJOR || header->version_minor != BUN_VERSION_MINOR) {
+    return BUN_UNSUPPORTED;
+  }
+
+  if (header->asset_table_offset % 4 != 0 || header->string_table_offset % 4 != 0 || header->string_table_size % 4 != 0 || header->data_section_offset % 4 != 0 || header->data_section_size % 4 != 0) {
+    return BUN_MALFORMED;
+  }
+
+  u64 file_size = (u64)ctx->file_size;
+  u64 asset_table_end = header->asset_table_offset + (u64)header->asset_count * BUN_ASSET_RECORD_SIZE;
+  u64 string_table_end = header->string_table_offset + header->string_table_size;
+  u64 data_section_end = header->data_section_offset + header->data_section_size;
+
+  if (asset_table_end > file_size ||
+      string_table_end > file_size ||
+      data_section_end > file_size) {
+    return BUN_MALFORMED;
+  }
+
+  if (asset_table_end > header->string_table_offset &&
+      header->asset_table_offset < string_table_end) {
+    return BUN_MALFORMED;
+  }
+
+  if (string_table_end > header->data_section_offset &&
+      header->string_table_offset < data_section_end) {
+    return BUN_MALFORMED;
+  }
+
   return BUN_OK;
 }
 
