@@ -218,6 +218,34 @@ static bun_result_t validate_asset_compression(BunParseContext *ctx, u32 idx,
   return BUN_UNSUPPORTED;
 }
 
+/* Issue #14 — validate the flags field (only bits 0x1 and 0x2 are defined)
+ * and require checksum to be zero (CRC-32 verification is not implemented). */
+static bun_result_t validate_asset_flags_checksum(BunParseContext *ctx, u32 idx,
+                                                  u32 flags, u32 checksum) {
+  u32 known_flags = BUN_FLAG_ENCRYPTED | BUN_FLAG_EXECUTABLE;
+  if (flags & ~known_flags) {
+    if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+      snprintf(ctx->violations[ctx->violation_count], BUN_VIOLATION_MSG_LEN,
+               "asset %u: unknown flag bits set (0x%X)",
+               (unsigned)idx, (unsigned)(flags & ~known_flags));
+      ctx->violation_count++;
+    }
+    return BUN_UNSUPPORTED;
+  }
+
+  if (checksum != 0) {
+    if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+      snprintf(ctx->violations[ctx->violation_count], BUN_VIOLATION_MSG_LEN,
+               "asset %u: non-zero checksum (0x%08X); CRC-32 is not implemented",
+               (unsigned)idx, (unsigned)checksum);
+      ctx->violation_count++;
+    }
+    return BUN_UNSUPPORTED;
+  }
+
+  return BUN_OK;
+}
+
 bun_result_t bun_parse_assets(BunParseContext *ctx, const BunHeader *header) {
   if (header->asset_count == 0)
     return BUN_OK;
@@ -317,6 +345,11 @@ bun_result_t bun_parse_assets(BunParseContext *ctx, const BunHeader *header) {
     vr = validate_asset_compression(ctx, i,
                                     r->compression, r->data_size,
                                     r->uncompressed_size);
+    if (vr != BUN_OK && result == BUN_OK)
+      result = vr;
+
+    /* Issue #14 — validate flags field and checksum. */
+    vr = validate_asset_flags_checksum(ctx, i, r->flags, r->checksum);
     if (vr != BUN_OK && result == BUN_OK)
       result = vr;
   }
