@@ -4,6 +4,8 @@
 #include <string.h>
 #include <errno.h>
 
+// --- Prologue ---
+
 // Helper: terminate abnormally, after printing a message to stderr
 void die(const char *fmt, ...)
 {
@@ -18,7 +20,6 @@ void die(const char *fmt, ...)
 
   abort();
 }
-
 
 // Helper: open a test fixture by name, relative to the tests/ directory.
 static const char *fixture(const char *filename) {
@@ -36,7 +37,21 @@ static const char *fixture(const char *filename) {
     return path;
 }
 
-// Example test suite: header parsing
+// Helper: asserts invalid bun files
+void assert_bun_status(const char* filename, bun_result_t expected) {
+    BunParseContext ctx = {0};
+    BunHeader header    = {0};
+
+    bun_result_t r = bun_open(fixture(filename), &ctx);
+    ck_assert_int_eq(r, BUN_OK);
+
+    r = bun_parse_header(&ctx, &header);
+    ck_assert_int_eq(r, expected);
+
+    bun_close(&ctx);
+}
+
+// --- Tests ---
 
 #test test_valid_minimal
     BunParseContext ctx = {0};
@@ -54,25 +69,7 @@ static const char *fixture(const char *filename) {
     bun_close(&ctx);
 
 #test test_bad_magic
-    BunParseContext ctx = {0};
-    BunHeader header    = {0};
-
-    bun_result_t r = bun_open(fixture("invalid/01-bad-magic.bun"), &ctx);
-    ck_assert_int_eq(r, BUN_OK);
-
-    r = bun_parse_header(&ctx, &header);
-    ck_assert_int_eq(r, BUN_MALFORMED);
-
-    bun_close(&ctx);
+    assert_bun_status("invalid/01-bad-magic.bun", BUN_MALFORMED);
 
 #test test_unsupported_version
-    BunParseContext ctx = {0};
-    BunHeader header    = {0};
-
-    bun_result_t r = bun_open(fixture("invalid/02-bad-version.bun"), &ctx);
-    ck_assert_int_eq(r, BUN_OK);
-
-    r = bun_parse_header(&ctx, &header);
-    ck_assert_int_eq(r, BUN_UNSUPPORTED);
-
-    bun_close(&ctx);
+    assert_bun_status("invalid/02-bad-version.bun", BUN_UNSUPPORTED);
