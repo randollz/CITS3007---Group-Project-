@@ -67,6 +67,20 @@ static int ranges_overlap(u64 a_start, u64 a_end, u64 b_start, u64 b_end) {
   return a_start < b_end && b_start < a_end;
 }
 
+/**
+ * Convert one 48-byte asset record from raw bytes into a BunAssetRecord.
+ */
+static void read_asset_record(const u8 *buf, BunAssetRecord *record) {
+  record->name_offset       = read_u32_le(buf, 0);
+  record->name_length       = read_u32_le(buf, 4);
+  record->data_offset       = read_u64_le(buf, 8);
+  record->data_size         = read_u64_le(buf, 16);
+  record->uncompressed_size = read_u64_le(buf, 24);
+  record->compression       = read_u32_le(buf, 32);
+  record->type              = read_u32_le(buf, 36);
+  record->checksum          = read_u32_le(buf, 40);
+  record->flags             = read_u32_le(buf, 44);
+}
 //
 // API implementation
 //
@@ -206,11 +220,29 @@ bun_result_t bun_parse_header(BunParseContext *ctx, BunHeader *header) {
 }
 
 bun_result_t bun_parse_assets(BunParseContext *ctx, const BunHeader *header) {
+  u8 buf[BUN_ASSET_RECORD_SIZE];
 
-  // TODO: implement asset record parsing and validation
+  if (fseek(ctx->file, (long)header->asset_table_offset, SEEK_SET) != 0) {
+    return BUN_ERR_IO;
+  }
+
+  for (u32 i = 0; i < header->asset_count; i++) {
+    BunAssetRecord record;
+
+    if (fread(buf, 1, BUN_ASSET_RECORD_SIZE, ctx->file) != BUN_ASSET_RECORD_SIZE) {
+      return BUN_MALFORMED;
+    }
+
+    read_asset_record(buf, &record);
+
+    /*
+     * This issue only reads and decodes records.
+     */
+  }
 
   return BUN_OK;
 }
+  // TODO: implement asset record parsing and validation
 
 bun_result_t bun_close(BunParseContext *ctx) {
   assert(ctx->file);
