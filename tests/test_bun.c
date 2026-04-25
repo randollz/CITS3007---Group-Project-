@@ -93,6 +93,118 @@ START_TEST(test_unsupported_version)
 {
 #line 75
     assert_bun_status("invalid/02-bad-version.bun", BUN_UNSUPPORTED);
+
+}
+END_TEST
+
+START_TEST(test_bad_offset_alignment)
+{
+#line 78
+    assert_bun_status("invalid/03-bad-offset-alignment.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_section_past_eof)
+{
+#line 81
+    assert_bun_status("invalid/04-section-past-eof.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_overlapping_sections)
+{
+#line 84
+    assert_bun_status("invalid/05-overlapping-sections.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_asset_name_past_string_table)
+{
+#line 87
+    assert_bun_status("invalid/06-asset-name-past-string-table.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_asset_name_nonprintable)
+{
+#line 90
+    assert_bun_status("invalid/07-asset-name-nonprintable.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_truncated_file)
+{
+#line 93
+    assert_bun_status("invalid/08-truncated-file.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_misaligned_section_size)
+{
+#line 96
+    assert_bun_status("invalid/09-misaligned-section-size.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_overlapping_with_nonprintable)
+{
+#line 99
+    assert_bun_status("invalid/10-overlapping-with-nonprintable.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_second_asset_empty_name)
+{
+#line 102
+    assert_bun_status("invalid/11-second-asset-empty-name.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_asset_name_oob)
+{
+#line 105
+    assert_bun_status("invalid/12-asset-name-oob.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_asset_empty_name)
+{
+#line 108
+    assert_bun_status("invalid/13-asset-empty-name.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_rle_zero_count)
+{
+#line 111
+    assert_bun_status("invalid/14-rle-zero-count.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_rle_bomb)
+{
+#line 114
+    assert_bun_status("invalid/15-rle-bomb.bun", BUN_MALFORMED);
+
+}
+END_TEST
+
+START_TEST(test_rle_truncated)
+{
+#line 117
+    assert_bun_status("invalid/16-rle-truncated.bun", BUN_MALFORMED);
 }
 END_TEST
 
@@ -107,6 +219,20 @@ int main(void)
     tcase_add_test(tc1_1, test_valid_minimal);
     tcase_add_test(tc1_1, test_bad_magic);
     tcase_add_test(tc1_1, test_unsupported_version);
+    tcase_add_test(tc1_1, test_bad_offset_alignment);
+    tcase_add_test(tc1_1, test_section_past_eof);
+    tcase_add_test(tc1_1, test_overlapping_sections);
+    tcase_add_test(tc1_1, test_asset_name_past_string_table);
+    tcase_add_test(tc1_1, test_asset_name_nonprintable);
+    tcase_add_test(tc1_1, test_truncated_file);
+    tcase_add_test(tc1_1, test_misaligned_section_size);
+    tcase_add_test(tc1_1, test_overlapping_with_nonprintable);
+    tcase_add_test(tc1_1, test_second_asset_empty_name);
+    tcase_add_test(tc1_1, test_asset_name_oob);
+    tcase_add_test(tc1_1, test_asset_empty_name);
+    tcase_add_test(tc1_1, test_rle_zero_count);
+    tcase_add_test(tc1_1, test_rle_bomb);
+    tcase_add_test(tc1_1, test_rle_truncated);
 
     srunner_run_all(sr, CK_ENV);
     nf = srunner_ntests_failed(sr);

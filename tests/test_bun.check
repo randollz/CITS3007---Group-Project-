@@ -73,3 +73,45 @@ void assert_bun_status(const char* filename, bun_result_t expected) {
 
 #test test_unsupported_version
     assert_bun_status("invalid/02-bad-version.bun", BUN_UNSUPPORTED);
+
+#test test_bad_offset_alignment
+    assert_bun_status("invalid/03-bad-offset-alignment.bun", BUN_MALFORMED);
+
+#test test_section_past_eof
+    assert_bun_status("invalid/04-section-past-eof.bun", BUN_MALFORMED);
+
+#test test_overlapping_sections
+    assert_bun_status("invalid/05-overlapping-sections.bun", BUN_MALFORMED);
+
+#test test_asset_name_past_string_table
+    assert_bun_status("invalid/06-asset-name-past-string-table.bun", BUN_MALFORMED);
+
+#test test_asset_name_nonprintable
+    assert_bun_status("invalid/07-asset-name-nonprintable.bun", BUN_MALFORMED);
+
+#test test_truncated_file
+    assert_bun_status("invalid/08-truncated-file.bun", BUN_MALFORMED);
+
+#test test_misaligned_section_size
+    assert_bun_status("invalid/09-misaligned-section-size.bun", BUN_MALFORMED);
+
+#test test_overlapping_with_nonprintable
+    assert_bun_status("invalid/10-overlapping-with-nonprintable.bun", BUN_MALFORMED);
+
+#test test_second_asset_empty_name
+    assert_bun_status("invalid/11-second-asset-empty-name.bun", BUN_MALFORMED);
+
+#test test_asset_name_oob
+    assert_bun_status("invalid/12-asset-name-oob.bun", BUN_MALFORMED);
+
+#test test_asset_empty_name
+    assert_bun_status("invalid/13-asset-empty-name.bun", BUN_MALFORMED);
+
+#test test_rle_zero_count
+    assert_bun_status("invalid/14-rle-zero-count.bun", BUN_MALFORMED);
+
+#test test_rle_bomb
+    assert_bun_status("invalid/15-rle-bomb.bun", BUN_MALFORMED);
+
+#test test_rle_truncated
+    assert_bun_status("invalid/16-rle-truncated.bun", BUN_MALFORMED);
