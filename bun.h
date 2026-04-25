@@ -71,18 +71,46 @@ typedef struct {
 #define BUN_ASSET_RECORD_SIZE 48
 
 //
+// Violation reporting limits
+//
+
+#define BUN_MAX_VIOLATIONS    32
+#define BUN_VIOLATION_MSG_LEN 256
+
+//
 // Parse context
 //
 // A struct to store information about the state of your parser (rather than
 // passing multiple arguments to every function).
 //
-// You will likely want to add fields to it as your implementation grows.
-//
 
+/*
+ * To record a violation from bun_parse.c:
+ *
+ *   if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+ *       snprintf(ctx->violations[ctx->violation_count],
+ *                BUN_VIOLATION_MSG_LEN,
+ *                "descriptive message here");
+ *       ctx->violation_count++;
+ *   }
+ */
 typedef struct {
-    FILE   *file;           // open file handle
-    long    file_size;      // total file size in bytes
-    // add further fields here as needed
+    FILE   *file;           /* open file handle                              */
+    long    file_size;      /* total file size in bytes                      */
+
+    /*
+     * Populated by bun_parse_assets(). Arrays are heap-allocated by
+     * bun_parse.c and freed by bun_close(). asset_names[i] is a
+     * null-terminated copy of the name for assets[i]. asset_count
+     * reflects how many records were successfully parsed.
+     */
+    BunAssetRecord *assets;
+    char          **asset_names;
+    u32             asset_count;
+
+    /* Violation messages recorded during parsing. */
+    char violations[BUN_MAX_VIOLATIONS][BUN_VIOLATION_MSG_LEN];
+    int  violation_count;
 } BunParseContext;
 
 //
