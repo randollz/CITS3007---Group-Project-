@@ -234,10 +234,30 @@ bun_result_t bun_parse_assets(BunParseContext *ctx, const BunHeader *header) {
     }
 
     read_asset_record(buf, &record);
+    
+    /* Bounds validation */
+    u64 name_end;
+    if (add_overflows_u64((u64)record.name_offset,
+                          (u64)record.name_length,
+                          &name_end)) {
+      return BUN_MALFORMED;
+    }
 
-    /*
-     * This issue only reads and decodes records.
-     */
+    if (name_end > header->string_table_size) {
+      return BUN_MALFORMED;
+    }
+
+    u64 data_end;
+    if (add_overflows_u64(record.data_offset,
+                          record.data_size,
+                          &data_end)) {
+      return BUN_MALFORMED;
+    }
+
+    if (data_end > header->data_section_size) {
+      return BUN_MALFORMED;
+    }
+    
   }
 
   return BUN_OK;
