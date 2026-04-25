@@ -33,6 +33,40 @@ static u64 read_u64_le(const u8 *buf, size_t offset) {
      | (u64)buf[offset + 7] << 56;
 }
 
+/**
+ * Safely add two u64 values.
+ * Returns 1 if the addition would overflow.
+ */
+static int add_overflows_u64(u64 a, u64 b, u64 *out) {
+  if (UINT64_MAX - a < b) {
+    return 1;
+  }
+
+  *out = a + b;
+  return 0;
+}
+
+/**
+ * Safely multiply two u64 values.
+ * Returns 1 if the multiplication would overflow.
+ */
+static int mul_overflows_u64(u64 a, u64 b, u64 *out) {
+  if (a != 0 && b > UINT64_MAX / a) {
+    return 1;
+  }
+
+  *out = a * b;
+  return 0;
+}
+
+/**
+ * Returns 1 if two half-open ranges overlap.
+ * Ranges are treated as [start, end).
+ */
+static int ranges_overlap(u64 a_start, u64 a_end, u64 b_start, u64 b_end) {
+  return a_start < b_end && b_start < a_end;
+}
+
 //
 // API implementation
 //
@@ -104,9 +138,28 @@ bun_result_t bun_parse_header(BunParseContext *ctx, BunHeader *header) {
   }
 
   u64 file_size = (u64)ctx->file_size;
-  u64 asset_table_end = header->asset_table_offset + (u64)header->asset_count * BUN_ASSET_RECORD_SIZE;
-  u64 string_table_end = header->string_table_offset + header->string_table_size;
-  u64 data_section_end = header->data_section_offset + header->data_section_size;
+  u64 asset_table_size;
+  u64 asset_table_end;
+  u64 string_table_end;
+  u64 data_section_end;
+
+  if (mul_overflows_u64((u64)header->asset_count,
+                        (u64)BUN_ASSET_RECORD_SIZE,
+                        &asset_table_size)) {
+    return BUN_MALFORMED;
+  }
+
+  if (add_overflows_u64(header->asset_table_offset,
+                        asset_table_size,
+                        &asset_table_end) ||
+      add_overflows_u64(header->string_table_offset,
+                        header->string_table_size,
+                        &string_table_end) ||
+      add_overflows_u64(header->data_section_offset,
+                        header->data_section_size,
+                        &data_section_end)) {
+    return BUN_MALFORMED;
+  }
 
   if (asset_table_end > file_size ||
       string_table_end > file_size ||
@@ -114,13 +167,38 @@ bun_result_t bun_parse_header(BunParseContext *ctx, BunHeader *header) {
     return BUN_MALFORMED;
   }
 
-  if (asset_table_end > header->string_table_offset &&
-      header->asset_table_offset < string_table_end) {
+
+
+  u64 header_start = 0;
+  u64 header_end = BUN_HEADER_SIZE;
+
+  if (ranges_overlap(header_start, header_end,
+                     header->asset_table_offset, asset_table_end)) {
     return BUN_MALFORMED;
   }
 
-  if (string_table_end > header->data_section_offset &&
-      header->string_table_offset < data_section_end) {
+  if (ranges_overlap(header_start, header_end,
+                     header->string_table_offset, string_table_end)) {
+    return BUN_MALFORMED;
+  }
+
+  if (ranges_overlap(header_start, header_end,
+                     header->data_section_offset, data_section_end)) {
+    return BUN_MALFORMED;
+  }
+
+  if (ranges_overlap(header->asset_table_offset, asset_table_end,
+                     header->string_table_offset, string_table_end)) {
+    return BUN_MALFORMED;
+  }
+
+  if (ranges_overlap(header->asset_table_offset, asset_table_end,
+                     header->data_section_offset, data_section_end)) {
+    return BUN_MALFORMED;
+  }
+
+  if (ranges_overlap(header->string_table_offset, string_table_end,
+                     header->data_section_offset, data_section_end)) {
     return BUN_MALFORMED;
   }
 
