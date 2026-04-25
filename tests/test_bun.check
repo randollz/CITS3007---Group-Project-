@@ -73,6 +73,7 @@ void assert_bun_status(const char* filename, bun_result_t expected) {
 
 #test test_unsupported_version
     assert_bun_status("invalid/02-bad-version.bun", BUN_UNSUPPORTED);
+    assert_bun_status("invalid/17-bad-minor-version.bun", BUN_UNSUPPORTED);
 
 #test test_bad_offset_alignment
     assert_bun_status("invalid/03-bad-offset-alignment.bun", BUN_MALFORMED);

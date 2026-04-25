@@ -93,13 +93,14 @@ START_TEST(test_unsupported_version)
 {
 #line 75
     assert_bun_status("invalid/02-bad-version.bun", BUN_UNSUPPORTED);
+    assert_bun_status("invalid/17-bad-minor-version.bun", BUN_UNSUPPORTED);
 
 }
 END_TEST
 
 START_TEST(test_bad_offset_alignment)
 {
-#line 78
+#line 79
     assert_bun_status("invalid/03-bad-offset-alignment.bun", BUN_MALFORMED);
 
 }
@@ -107,7 +108,7 @@ END_TEST
 
 START_TEST(test_section_past_eof)
 {
-#line 81
+#line 82
     assert_bun_status("invalid/04-section-past-eof.bun", BUN_MALFORMED);
 
 }
@@ -115,7 +116,7 @@ END_TEST
 
 START_TEST(test_overlapping_sections)
 {
-#line 84
+#line 85
     assert_bun_status("invalid/05-overlapping-sections.bun", BUN_MALFORMED);
 
 }
@@ -123,7 +124,7 @@ END_TEST
 
 START_TEST(test_asset_name_past_string_table)
 {
-#line 87
+#line 88
     assert_bun_status("invalid/06-asset-name-past-string-table.bun", BUN_MALFORMED);
 
 }
@@ -131,7 +132,7 @@ END_TEST
 
 START_TEST(test_asset_name_nonprintable)
 {
-#line 90
+#line 91
     assert_bun_status("invalid/07-asset-name-nonprintable.bun", BUN_MALFORMED);
 
 }
@@ -139,7 +140,7 @@ END_TEST
 
 START_TEST(test_truncated_file)
 {
-#line 93
+#line 94
     assert_bun_status("invalid/08-truncated-file.bun", BUN_MALFORMED);
 
 }
@@ -147,7 +148,7 @@ END_TEST
 
 START_TEST(test_misaligned_section_size)
 {
-#line 96
+#line 97
     assert_bun_status("invalid/09-misaligned-section-size.bun", BUN_MALFORMED);
 
 }
@@ -155,7 +156,7 @@ END_TEST
 
 START_TEST(test_overlapping_with_nonprintable)
 {
-#line 99
+#line 100
     assert_bun_status("invalid/10-overlapping-with-nonprintable.bun", BUN_MALFORMED);
 
 }
@@ -163,7 +164,7 @@ END_TEST
 
 START_TEST(test_second_asset_empty_name)
 {
-#line 102
+#line 103
     assert_bun_status("invalid/11-second-asset-empty-name.bun", BUN_MALFORMED);
 
 }
@@ -171,7 +172,7 @@ END_TEST
 
 START_TEST(test_asset_name_oob)
 {
-#line 105
+#line 106
     assert_bun_status("invalid/12-asset-name-oob.bun", BUN_MALFORMED);
 
 }
@@ -179,7 +180,7 @@ END_TEST
 
 START_TEST(test_asset_empty_name)
 {
-#line 108
+#line 109
     assert_bun_status("invalid/13-asset-empty-name.bun", BUN_MALFORMED);
 
 }
@@ -187,7 +188,7 @@ END_TEST
 
 START_TEST(test_rle_zero_count)
 {
-#line 111
+#line 112
     assert_bun_status("invalid/14-rle-zero-count.bun", BUN_MALFORMED);
 
 }
@@ -195,7 +196,7 @@ END_TEST
 
 START_TEST(test_rle_bomb)
 {
-#line 114
+#line 115
     assert_bun_status("invalid/15-rle-bomb.bun", BUN_MALFORMED);
 
 }
@@ -203,7 +204,7 @@ END_TEST
 
 START_TEST(test_rle_truncated)
 {
-#line 117
+#line 118
     assert_bun_status("invalid/16-rle-truncated.bun", BUN_MALFORMED);
 }
 END_TEST
