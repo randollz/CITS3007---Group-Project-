@@ -12,9 +12,9 @@ typedef enum {
     BUN_OK          = 0,
     BUN_MALFORMED   = 1,
     BUN_UNSUPPORTED = 2,
-    BUN_ERR_IO      = 3,   /* I/O error or file not found -- you may define
-                              additional codes in the range 3-10 as needed;
-                              document them in your report */
+    BUN_ERR_IO      = 3,   /* I/O error: file not found, permission denied,
+                              or read failure mid-parse                     */
+    BUN_ERR_ARGS    = 4,   /* Wrong number of command-line arguments        */
 } bun_result_t;
 
 //
@@ -79,10 +79,45 @@ typedef struct {
 // You will likely want to add fields to it as your implementation grows.
 //
 
+/*
+ * Violation reporting: bun_parse_header() and bun_parse_assets() record each
+ * spec violation here rather than printing to stderr directly. main.c reads
+ * these after the parse call returns and prints them. This keeps I/O out of
+ * the parse functions, making them easier to unit test.
+ *
+ * To record a violation from bun_parse.c:
+ *
+ *   if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+ *       snprintf(ctx->violations[ctx->violation_count],
+ *                BUN_VIOLATION_MSG_LEN,
+ *                "descriptive message here");
+ *       ctx->violation_count++;
+ *   }
+ */
+#define BUN_MAX_VIOLATIONS    32
+#define BUN_VIOLATION_MSG_LEN 256
+
 typedef struct {
-    FILE   *file;           // open file handle
-    long    file_size;      // total file size in bytes
-    // add further fields here as needed
+    FILE   *file;           /* open file handle                              */
+    long    file_size;      /* total file size in bytes                      */
+
+    /*
+     * Populated by bun_parse_assets(). The arrays are heap-allocated by
+     * bun_parse.c and must be freed by bun_close().
+     *
+     * asset_names[i] is a null-terminated copy of the name for assets[i],
+     * read from the string table. Length on disk is assets[i].name_length.
+     *
+     * asset_count reflects how many records were successfully parsed. On
+     * BUN_MALFORMED this may be less than header.asset_count.
+     */
+    BunAssetRecord *assets;
+    char          **asset_names;
+    u32             asset_count;
+
+    /* Violation messages recorded during parsing. */
+    char violations[BUN_MAX_VIOLATIONS][BUN_VIOLATION_MSG_LEN];
+    int  violation_count;
 } BunParseContext;
 
 //
