@@ -166,6 +166,58 @@ static bun_result_t validate_asset_name(BunParseContext *ctx, u32 idx,
   return BUN_OK;
 }
 
+/* Issue #13 — validate the compression field and related size constraints.
+ * compression=0: uncompressed_size must be 0.
+ * compression=1 (RLE): data_size must be even.
+ * compression=2 (zlib) or unknown: not supported. */
+static bun_result_t validate_asset_compression(BunParseContext *ctx, u32 idx,
+                                               u32 compression, u64 data_size,
+                                               u64 uncompressed_size) {
+  if (compression == 0) {
+    if (uncompressed_size != 0) {
+      if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+        snprintf(ctx->violations[ctx->violation_count], BUN_VIOLATION_MSG_LEN,
+                 "asset %u: compression=0 (none) but uncompressed_size is non-zero",
+                 (unsigned)idx);
+        ctx->violation_count++;
+      }
+      return BUN_MALFORMED;
+    }
+    return BUN_OK;
+  }
+
+  if (compression == 1) {
+    if (data_size % 2 != 0) {
+      if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+        snprintf(ctx->violations[ctx->violation_count], BUN_VIOLATION_MSG_LEN,
+                 "asset %u: RLE compression requires even data_size, got %llu",
+                 (unsigned)idx, (unsigned long long)data_size);
+        ctx->violation_count++;
+      }
+      return BUN_MALFORMED;
+    }
+    return BUN_OK;
+  }
+
+  if (compression == 2) {
+    if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+      snprintf(ctx->violations[ctx->violation_count], BUN_VIOLATION_MSG_LEN,
+               "asset %u: zlib compression (compression=2) is not supported",
+               (unsigned)idx);
+      ctx->violation_count++;
+    }
+    return BUN_UNSUPPORTED;
+  }
+
+  if (ctx->violation_count < BUN_MAX_VIOLATIONS) {
+    snprintf(ctx->violations[ctx->violation_count], BUN_VIOLATION_MSG_LEN,
+             "asset %u: unknown compression value %u",
+             (unsigned)idx, (unsigned)compression);
+    ctx->violation_count++;
+  }
+  return BUN_UNSUPPORTED;
+}
+
 bun_result_t bun_parse_assets(BunParseContext *ctx, const BunHeader *header) {
   if (header->asset_count == 0)
     return BUN_OK;
@@ -258,6 +310,13 @@ bun_result_t bun_parse_assets(BunParseContext *ctx, const BunHeader *header) {
     bun_result_t vr = validate_asset_name(ctx, i, strtab,
                                           header->string_table_size,
                                           r->name_offset, r->name_length);
+    if (vr != BUN_OK && result == BUN_OK)
+      result = vr;
+
+    /* Issue #13 — validate compression field and size constraints. */
+    vr = validate_asset_compression(ctx, i,
+                                    r->compression, r->data_size,
+                                    r->uncompressed_size);
     if (vr != BUN_OK && result == BUN_OK)
       result = vr;
   }
