@@ -14,6 +14,29 @@ static u32 read_u32_le(const u8 *buf, size_t offset) {
      | (u32)buf[offset + 1] << 8
      | (u32)buf[offset + 2] << 16
      | (u32)buf[offset + 3] << 24;
+
+}
+/**
+ * Convert 2 bytes in `buf`, positioned at `offset`,
+ * into a little-endian u16.
+ */
+static u16 read_u16_le(const u8 *buf, size_t offset) {
+  return (u16)buf[offset]
+     | (u16)buf[offset + 1] << 8;
+}
+/**
+ * Convert 8 bytes in `buf`, positioned at `offset`,
+ * into a little-endian u64.
+ */
+static u64 read_u64_le(const u8 *buf, size_t offset) {
+  return (u64)buf[offset]
+     | (u64)buf[offset + 1] << 8
+     | (u64)buf[offset + 2] << 16
+     | (u64)buf[offset + 3] << 24
+     | (u64)buf[offset + 4] << 32
+     | (u64)buf[offset + 5] << 40
+     | (u64)buf[offset + 6] << 48
+     | (u64)buf[offset + 7] << 56;
 }
 
 //
